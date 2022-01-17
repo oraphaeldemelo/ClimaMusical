@@ -9,14 +9,13 @@ const getPlaylistByCity = async ( req: Request, res: Response, next: NextFunctio
     try {
         let city = req.params.city;
         
-        let cityInfo: WeatherData = await getCity(city);
+        let cityInfo: WeatherData = await getCity(city);        
         
         let playlist: PlaylistResponse = await playlstWeather.playlistByWeather(cityInfo);        
 
         res.status(200).json({ data: playlist });
         
     } catch (error) {
-        console.log(error)
         res.status(500).json({ message: "Houve algum erro"});
     }
 }
@@ -30,6 +29,10 @@ const getPlaylistByCoordinates = async ( req: Request, res: Response, next: Next
 
         let url: string = `${process.env.WEATHER_COORD_API}lat=${latitude}&lon=${longitude}&appid=${process.env.WEATHER_TOKEN}`;
         let result: AxiosResponse = await axios.get(url);
+
+        if(result.data.length === 0){
+            return res.status(404).json({message: "Não foi encontrada nenhuma cidade com essas coordenadas"})
+        }
        
         let weather: City = result.data[0];
         let cityInfo: WeatherData = await getCity(weather.name);
@@ -38,7 +41,7 @@ const getPlaylistByCoordinates = async ( req: Request, res: Response, next: Next
 
         return res.status(200).json({ message: playlist });
         
-    } catch (error) {
+    } catch (error) {        
         res.status(500).json({ message: "Houve algum erro"});
     }
 
@@ -46,11 +49,11 @@ const getPlaylistByCoordinates = async ( req: Request, res: Response, next: Next
 
 const getCity = async (city:string) => {
     try {
-        let result: AxiosResponse = await axios.get(`${process.env.WEATHER_CITY_API}${city}&appid=${process.env.WEATHER_TOKEN}`);
+        let result: AxiosResponse = await axios.get(`${process.env.WEATHER_CITY_API}${city}&appid=${process.env.WEATHER_TOKEN}`);                
         let cityInfo: WeatherData = result.data;
 
         return cityInfo;
-    } catch (error) {
+    } catch (error) {        
         throw error;
     }
 }
